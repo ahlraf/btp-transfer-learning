@@ -57,7 +57,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # read CSVs
-url_data = "https://github.com/ahlraf/btp-transfer-learning/blob/master/experiment-2/combined_data.csv?raw=true"
+url_data = "https://github.com/ahlraf/btp-transfer-learning/blob/master/experiment-3/combined_data2.csv?raw=true"
 
 
 # read as pandas DataFrame (to be converted to dataset later)
@@ -66,10 +66,12 @@ df = pd.read_csv(url_data, header='infer', skip_blank_lines=True, encoding="utf-
 # cleaning
 df.dropna(axis=0, how="any", inplace=True)
 df.drop(df.index[0], inplace=True)
+df = df.sample(frac=1).reset_index(drop=True)
 
 print("Original count:", df['label'].value_counts(normalize=False))
 
 # set numeric values
+# df['label'] = [0 if x=='depressed' else 1 for x in df['label']]
 
 print("\n\nOriginal dataframe\n")
 print(df.head())
@@ -381,7 +383,7 @@ def tokenize_function(ds):
 
 from transformers import AutoModelForSequenceClassification, TrainingArguments, Trainer
 
-num_labels = 3
+num_labels = 2
 model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
 
 metric_name = "f1"
