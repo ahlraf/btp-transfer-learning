@@ -36,6 +36,8 @@ Installations
 # print(imblearn.__version__)
 
 from collections import Counter
+from imblearn.under_sampling import RandomUnderSampler
+
 # set model as required (a whole list of possible pre-trained Transformer models here: https://huggingface.co/transformers/pretrained_models.html)
 model_checkpoint = "bert-base-uncased"
 batch_size = 4
@@ -45,7 +47,7 @@ from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
 
 # set metric as required. Available inbuilt metrics (extend the datasets Metric class) are here: https://github.com/huggingface/datasets/tree/master/metrics. Can write your own custom metric too. 
-metric = load_metric('recall')
+metric = load_metric('accuracy')
 
 # uncomment the below to print selected metric details
 # print(metric)
@@ -57,7 +59,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # read CSVs
-url_data = "https://github.com/ahlraf/btp-transfer-learning/blob/master/processed-data/suicide_vs_depression.csv?raw=true"
+url_data = "https://github.com/ahlraf/btp-transfer-learning/blob/master/experiment-3/combined_data2.csv?raw=true"
 
 
 # read as pandas DataFrame (to be converted to dataset later)
@@ -66,6 +68,7 @@ df = pd.read_csv(url_data, header='infer', skip_blank_lines=True, encoding="utf-
 # cleaning
 df.dropna(axis=0, how="any", inplace=True)
 df.drop(df.index[0], inplace=True)
+df = df.sample(frac=1).reset_index(drop=True)
 
 print("Original count:", df['label'].value_counts(normalize=False))
 
@@ -385,7 +388,7 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments, 
 num_labels = 2
 model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
 
-metric_name = "recall"
+metric_name = "accuracy"
 
 # define TrainingArguments: arguments/ hyperparameters used in training/eval loop. You can find a complete list here: https://huggingface.co/transformers/main_classes/trainer.html#transformers.TrainingArguments.
 # Most of these can be optimized
@@ -405,7 +408,7 @@ args = TrainingArguments(
 def compute_metrics(eval_pred):
   predictions, labels = eval_pred
   predictions = np.argmax(predictions, axis=1)
-  return metric.compute(predictions=predictions, references=labels, average="macro")
+  return metric.compute(predictions=predictions, references=labels)
   
   
 for fold_i in range(len(folds)):
@@ -425,44 +428,40 @@ for fold_i in range(len(folds)):
 
   # aug_train is final ds
 
-  ## NO BALANCING!!
-  """### Class balancing: random oversampling"""
+  """### Class balancing: random undersampling"""
 
 
-  # train_text = aug_train["text"]
-  # train_labels = aug_train["label"]
-  # print("#\n\nLabel count before oversampling:", Counter(train_labels))
+  train_text = train_df["text"]
+  train_labels = train_df["label"]
+  print("#\n\nLabel count before undersampling:", Counter(train_labels))
 
-  # X_train_np, y_train_l = train_text.to_numpy(), train_labels.to_list()
-  # X_train_np = X_train_np.reshape((-1, 1))
+  X_train_np, y_train_l = train_text.to_numpy(), train_labels.to_list()
+  X_train_np = X_train_np.reshape((-1, 1))
 
   # from sklearn.utils.multiclass import type_of_target - need this!
   # print(type_of_target(tr_list))
 
+  # for random oversampling, uncomment the below:
   # ros = RandomOverSampler(sampling_strategy="minority")
   # X_resampled, y_resampled = ros.fit_resample(X_train_np, y_train_l)
 
   # for random undersampling, uncomment the below:
-  # rus = RandomUnderSampler(sampling_strategy="majority")
-  # X_resampled, y_resampled = rus.fit_resample(X_train_np, y_train_np)
+  rus = RandomUnderSampler(sampling_strategy="majority")
+  X_resampled, y_resampled = rus.fit_resample(X_train_np, y_train_l)
 
-  # shape = (len(y_resampled),)
-  # X_resampled = X_resampled.reshape(shape)
+  shape = (len(y_resampled),)
+  X_resampled = X_resampled.reshape(shape)
 
-  # train_text = X_resampled
-  # train_labels = y_resampled
+  train_text = X_resampled
+  train_labels = y_resampled
 
   # print("Label count after oversampling:", Counter(train_labels))
-  # print("Label count after undersampling:", Counter(train_labels))
+  print("Label count after undersampling:", Counter(train_labels))
 
-  # train = pd.DataFrame({'text': train_text, 'label': train_labels})
-
-  # print("\n\nTrain dataset after augmentation and oversampling\n")
-  # print(train.head())
+  train_df = pd.DataFrame({'text': train_text, 'label': train_labels})
 
   # convert to dataset for easier Transformer integration
 
-  # aug_train!
   train_ds = Dataset.from_pandas(train_df)
   eval_ds = Dataset.from_pandas(eval_df)
   test_ds = Dataset.from_pandas(test_df)

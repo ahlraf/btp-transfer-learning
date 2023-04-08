@@ -66,7 +66,6 @@ df = pd.read_csv(url_data, header='infer', skip_blank_lines=True, encoding="utf-
 # cleaning
 df.dropna(axis=0, how="any", inplace=True)
 df.drop(df.index[0], inplace=True)
-df["label"] = [0 if x=='0' else 1 for x in df["label"]]
 
 print("Original count:", df['label'].value_counts(normalize=False))
 

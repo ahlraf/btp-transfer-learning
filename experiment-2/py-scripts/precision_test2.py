@@ -45,7 +45,7 @@ from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
 
 # set metric as required. Available inbuilt metrics (extend the datasets Metric class) are here: https://github.com/huggingface/datasets/tree/master/metrics. Can write your own custom metric too. 
-metric = load_metric('recall')
+metric = load_metric('precision')
 
 # uncomment the below to print selected metric details
 # print(metric)
@@ -66,6 +66,7 @@ df = pd.read_csv(url_data, header='infer', skip_blank_lines=True, encoding="utf-
 # cleaning
 df.dropna(axis=0, how="any", inplace=True)
 df.drop(df.index[0], inplace=True)
+df = df.sample(frac=1).reset_index(drop=True)
 
 print("Original count:", df['label'].value_counts(normalize=False))
 
@@ -385,7 +386,7 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments, 
 num_labels = 2
 model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
 
-metric_name = "recall"
+metric_name = "precision"
 
 # define TrainingArguments: arguments/ hyperparameters used in training/eval loop. You can find a complete list here: https://huggingface.co/transformers/main_classes/trainer.html#transformers.TrainingArguments.
 # Most of these can be optimized
@@ -405,23 +406,23 @@ args = TrainingArguments(
 def compute_metrics(eval_pred):
   predictions, labels = eval_pred
   predictions = np.argmax(predictions, axis=1)
-  return metric.compute(predictions=predictions, references=labels, average="macro")
+  return metric.compute(predictions=predictions, references=labels)
   
   
 for fold_i in range(len(folds)):
   print("\nFold", fold_i+1, "\n")
 
   train_df, eval_df, test_df = folds[fold_i][0], folds[fold_i][1], folds[fold_i][2]
-  print("\nNumber of datapoints:", len(train_df))
+  print("\nNumber of datapoints before augmentation: ", len(train_df))
   print("\n", Counter(train_df["label"]))
 
   # ----------------- EDA ----------------------------
   # empty DataFrame
-  # output_train = pd.DataFrame(columns=["text", "label"])
-  # aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
+  output_train = pd.DataFrame(columns=["text", "label"])
+  aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
 
-  # print("\n\n# of datapoints before augmentation:", len(train_df))
-  # print("# of datapoints after augmentation:", len(aug_train))
+  print("\n\nNumber of datapoints after augmentation: ", len(aug_train))
+  print("\n", Counter(aug_train["label"]))
 
   # aug_train is final ds
 
@@ -463,7 +464,7 @@ for fold_i in range(len(folds)):
   # convert to dataset for easier Transformer integration
 
   # aug_train!
-  train_ds = Dataset.from_pandas(train_df)
+  train_ds = Dataset.from_pandas(aug_train)
   eval_ds = Dataset.from_pandas(eval_df)
   test_ds = Dataset.from_pandas(test_df)
 

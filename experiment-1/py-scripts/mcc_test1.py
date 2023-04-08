@@ -45,7 +45,7 @@ from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
 
 # set metric as required. Available inbuilt metrics (extend the datasets Metric class) are here: https://github.com/huggingface/datasets/tree/master/metrics. Can write your own custom metric too. 
-metric = load_metric('recall')
+metric = load_metric('matthews_correlation')
 
 # uncomment the below to print selected metric details
 # print(metric)
@@ -385,7 +385,7 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments, 
 num_labels = 2
 model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
 
-metric_name = "recall"
+metric_name = "matthews_correlation"
 
 # define TrainingArguments: arguments/ hyperparameters used in training/eval loop. You can find a complete list here: https://huggingface.co/transformers/main_classes/trainer.html#transformers.TrainingArguments.
 # Most of these can be optimized
@@ -405,7 +405,7 @@ args = TrainingArguments(
 def compute_metrics(eval_pred):
   predictions, labels = eval_pred
   predictions = np.argmax(predictions, axis=1)
-  return metric.compute(predictions=predictions, references=labels, average="macro")
+  return metric.compute(predictions=predictions, references=labels)
   
   
 for fold_i in range(len(folds)):
