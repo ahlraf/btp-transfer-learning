@@ -14,7 +14,10 @@ This repository contains:
 
 Experiment guide:
 - Experiment 1: depressed (0) vs suicidal (1) classification (original data)
-- Experiment 2: depressed (0) vs suicidal (1) classification (data augmented by EDA)
-- Experiment 3: depressed OR suicidal (0) vs control (1) classification (original data)
-- Experiment 4: depressed OR suicidal (0) vs control (1) classification (data balanced by random undersampling)
-- Experiment 5: depressed OR suicidal (0) vs control (1) classification (data balanced by random oversampling)
+- Experiment 2: depressed (0) vs suicidal (1) classification (data augmented by EDA) (best 2C)
+- Experiment 3: depressed/suicidal (0) vs control (1) classification (original data)
+- Experiment 4: depressed/suicidal (0) vs control (1) classification (data balanced by random undersampling)
+- Experiment 5: depressed/suicidal (0) vs control (1) classification (data balanced by random oversampling) 
+- Experiment 6: depressed/suicidal (0) vs control (1) classification (EDA only)
+- Experiment 7: depressed/suicidal (0) vs control (1) classification (EDA + undersampling)
+- Experiment 8: depressed/suicidal (0) vs control (1) classification (EDA + oversampling)
