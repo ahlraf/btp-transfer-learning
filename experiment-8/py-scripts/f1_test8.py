@@ -411,24 +411,21 @@ for fold_i in range(len(folds)):
   print("\nFold", fold_i+1, "\n")
 
   train_df, eval_df, test_df = folds[fold_i][0], folds[fold_i][1], folds[fold_i][2]
-  print("\nNumber of datapoints:", len(train_df))
+  print("\nNumber of datapoints before augmentation: ", len(train_df))
   print("\n", Counter(train_df["label"]))
 
   # ----------------- EDA ----------------------------
   # empty DataFrame
-  # output_train = pd.DataFrame(columns=["text", "label"])
-  # aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
+  output_train = pd.DataFrame(columns=["text", "label"])
+  aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
 
-  # print("\n\n# of datapoints before augmentation:", len(train_df))
-  # print("# of datapoints after augmentation:", len(aug_train))
-
-  # aug_train is final ds
+  print("\n\nNumber of datapoints after augmentation: ", len(aug_train))
+  print("\n", Counter(aug_train["label"]))
 
   """### Class balancing: random undersampling"""
 
-
-  train_text = train_df["text"]
-  train_labels = train_df["label"]
+  train_text = aug_train["text"]
+  train_labels = aug_train["label"]
   print("#\n\nLabel count before oversampling:", Counter(train_labels))
 
   X_train_np, y_train_l = train_text.to_numpy(), train_labels.to_list()
@@ -448,7 +445,7 @@ for fold_i in range(len(folds)):
   train_labels = y_resampled
 
   # print("Label count after oversampling:", Counter(train_labels))
-  print("Label count after undersampling:", Counter(train_labels))
+  print("Label count after oversampling:", Counter(train_labels))
 
   train_df = pd.DataFrame({'text': train_text, 'label': train_labels})
 

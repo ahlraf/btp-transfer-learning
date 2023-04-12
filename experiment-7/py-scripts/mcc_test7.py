@@ -36,7 +36,7 @@ Installations
 # print(imblearn.__version__)
 
 from collections import Counter
-from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 
 # set model as required (a whole list of possible pre-trained Transformer models here: https://huggingface.co/transformers/pretrained_models.html)
 model_checkpoint = "bert-base-uncased"
@@ -47,7 +47,7 @@ from datasets import load_dataset, load_metric
 from sklearn.metrics import classification_report
 
 # set metric as required. Available inbuilt metrics (extend the datasets Metric class) are here: https://github.com/huggingface/datasets/tree/master/metrics. Can write your own custom metric too. 
-metric = load_metric('f1')
+metric = load_metric('matthews_correlation')
 
 # uncomment the below to print selected metric details
 # print(metric)
@@ -364,6 +364,10 @@ def gen_eda(orig_train_df, output_train_df, alpha_sr, alpha_ri, alpha_rs, alpha_
   print("Generated", num_aug, "sentences per input sentence with EDA")
   return output_train_df
 
+# from imblearn.over_sampling import RandomOverSampler
+# for random undersampling, uncomment the below:
+# from imblearn.under_sampling import RandomUnderSampler
+
 from datasets import Dataset
 
 print("\n\nMetric details")
@@ -384,7 +388,7 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments, 
 num_labels = 2
 model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
 
-metric_name = "f1"
+metric_name = "matthews_correlation"
 
 # define TrainingArguments: arguments/ hyperparameters used in training/eval loop. You can find a complete list here: https://huggingface.co/transformers/main_classes/trainer.html#transformers.TrainingArguments.
 # Most of these can be optimized
@@ -404,32 +408,32 @@ args = TrainingArguments(
 def compute_metrics(eval_pred):
   predictions, labels = eval_pred
   predictions = np.argmax(predictions, axis=1)
-  return metric.compute(predictions=predictions, references=labels, average="macro")
+  return metric.compute(predictions=predictions, references=labels)
   
   
 for fold_i in range(len(folds)):
   print("\nFold", fold_i+1, "\n")
 
   train_df, eval_df, test_df = folds[fold_i][0], folds[fold_i][1], folds[fold_i][2]
-  print("\nNumber of datapoints:", len(train_df))
+  print("\nNumber of datapoints before augmentation: ", len(train_df))
   print("\n", Counter(train_df["label"]))
 
   # ----------------- EDA ----------------------------
   # empty DataFrame
-  # output_train = pd.DataFrame(columns=["text", "label"])
-  # aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
+  output_train = pd.DataFrame(columns=["text", "label"])
+  aug_train = gen_eda(train_df, output_train, 0.05, 0.05, 0.05, 0.05, 4)
 
-  # print("\n\n# of datapoints before augmentation:", len(train_df))
-  # print("# of datapoints after augmentation:", len(aug_train))
+  print("\n\nNumber of datapoints after augmentation: ", len(aug_train))
+  print("\n", Counter(aug_train["label"]))
 
   # aug_train is final ds
 
   """### Class balancing: random undersampling"""
 
 
-  train_text = train_df["text"]
-  train_labels = train_df["label"]
-  print("#\n\nLabel count before oversampling:", Counter(train_labels))
+  train_text = aug_train["text"]
+  train_labels = aug_train["label"]
+  print("#\n\nLabel count before undersampling:", Counter(train_labels))
 
   X_train_np, y_train_l = train_text.to_numpy(), train_labels.to_list()
   X_train_np = X_train_np.reshape((-1, 1))
@@ -438,8 +442,12 @@ for fold_i in range(len(folds)):
   # print(type_of_target(tr_list))
 
   # for random oversampling, uncomment the below:
-  ros = RandomOverSampler(sampling_strategy="minority")
-  X_resampled, y_resampled = ros.fit_resample(X_train_np, y_train_l)
+  # ros = RandomOverSampler(sampling_strategy="minority")
+  # X_resampled, y_resampled = ros.fit_resample(X_train_np, y_train_l)
+
+  # for random undersampling, uncomment the below:
+  rus = RandomUnderSampler(sampling_strategy="majority")
+  X_resampled, y_resampled = rus.fit_resample(X_train_np, y_train_l)
 
   shape = (len(y_resampled),)
   X_resampled = X_resampled.reshape(shape)
