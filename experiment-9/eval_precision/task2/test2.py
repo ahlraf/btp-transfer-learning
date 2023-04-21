@@ -59,6 +59,8 @@ from sklearn.model_selection import train_test_split
 # read CSVs
 url_data = "https://github.com/ahlraf/btp-transfer-learning/blob/master/processed-data/suicide_vs_depression.csv?raw=true"
 
+# D: class 0
+# S: class 1
 
 # read as pandas DataFrame (to be converted to dataset later)
 df = pd.read_csv(url_data, header='infer', skip_blank_lines=True, encoding="utf-8")
@@ -73,8 +75,7 @@ print("Original count:", df['label'].value_counts(normalize=False))
 # set numeric values
 # df['label'] = [0 if x=='depressed' else 1 for x in df['label']]
 
-print("\n\nOriginal dataframe\n")
-print(df.head())
+url_test = "https://github.com/ahlraf/btp-transfer-learning/raw/master/experiment-9/eval_precision/test_1_predicted_labels.csv"
 
 ## 5-fold cross cv
 
