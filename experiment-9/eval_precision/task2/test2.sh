@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=32000M
 #SBATCH --time=2-00:00
-#SBATCH --output=mcc_test2.out
+#SBATCH --output=test2.out
 
 
 module load python/3.7
@@ -41,4 +41,4 @@ pip install datasets==1.17.0
 pip install nltk==3.2.5 
 pip install imbalanced-learn==0.8.1 --no-index
 
-python mcc_test2.py
+python test2.py

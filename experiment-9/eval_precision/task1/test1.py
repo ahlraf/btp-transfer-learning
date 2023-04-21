@@ -48,7 +48,6 @@ print(df_test1.head())
 
 # cleaning
 df_test1.dropna(axis=0, how="any", inplace=True)
-df_test1.drop(df_test1.index[0], inplace=True)
 df_test1 = df_test1.sample(frac=1).reset_index(drop=True)
 
 print(df_test1.head())

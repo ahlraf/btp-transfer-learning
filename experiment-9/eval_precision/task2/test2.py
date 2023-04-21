@@ -77,6 +77,18 @@ print("Original count:", df['label'].value_counts(normalize=False))
 
 url_test = "https://github.com/ahlraf/btp-transfer-learning/raw/master/experiment-9/eval_precision/test_1_predicted_labels.csv"
 
+df_test = pd.read_csv(url_test, header="infer", skip_blank_lines=True, encoding="utf-8")
+# print(df_test.head())
+
+# isolating D/S from control
+df_test_DS = df_test.loc[df_test["plabel_1"]==1]
+df_test_DS.dropna(axis=0, how="any", inplace=True)
+df_test_DS.sample(frac=1).reset_index(drop=True)
+df_test_DS1 = df_test_DS[["text","tlabel_2"]]
+df_test_DS1 = df_test_DS1.rename(columns={"tlabel_2":"label"})
+print("\n\Head test\n",df_test_DS1.head())
+print("nOriginal test count:\n", df_test_DS1['label'].value_counts(normalize=False))
+
 ## 5-fold cross cv
 
 from sklearn.model_selection import KFold, StratifiedKFold
@@ -88,19 +100,17 @@ y = df["label"].to_numpy()
 
 folds = []
 
-for train_index, test_index in skf.split(x,y):
+for train_index, val_index in skf.split(x,y):
   x_train, y_train = x[train_index], y[train_index]
-  x_test, y_test = x[test_index], y[test_index]
+  x_val, y_val = x[val_index], y[val_index]
     
-  train_d = pd.DataFrame({"text":x_train, "label":y_train})
-  train_df, val_df = train_test_split(train_d, test_size=0.2, stratify=train_d["label"])
-  test_df = pd.DataFrame({"text":x_test, "label":y_test})
+  train_df = pd.DataFrame({"text":x_train, "label":y_train})
+  val_df = pd.DataFrame({"text":x_val, "label":y_val})
 
   train = train_df.reset_index(drop=True)
   eval = val_df.reset_index(drop=True) 
-  test = test_df.reset_index(drop=True)
 
-  folds.append([train, eval, test])
+  folds.append([train, eval, df_test_DS1])
 
 
 """### EDA implementation"""
